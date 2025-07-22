@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流服务商绩效分析仪表板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .dashboard-header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .positive {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .negative {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .insight-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 3px solid #3498db;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #eee;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            white-space: nowrap;
+        }
+        .tab.active {
+            background: white;
+            font-weight: bold;
+            border-bottom: 3px solid #3498db;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .data-table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>物流服务商绩效分析仪表板</h1>
+        <p>2024年5月数据 | 更新日期: 2024年6月15日</p>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <h3>TOP 3服务商</h3>
+            <div class="metric-value">远邮/新源晟/淌瀛</div>
+            <p>综合得分 ≥ 90.5</p>
+        </div>
+        <div class="metric-card">
+            <h3>最高单量</h3>
+            <div class="metric-value">5,335票/日</div>
+            <p>深圳市禾平国际物流</p>
+        </div>
+        <div class="metric-card">
+            <h3>最高妥投率</h3>
+            <div class="metric-value">100%</div>
+            <p>广东拓界供应链</p>
+        </div>
+        <div class="metric-card">
+            <h3>最低妥投率</h3>
+            <div class="metric-value">34.25%</div>
+            <p>中外运厦门分公司</p>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="openTab('summary')">分析概览</div>
+        <div class="tab" onclick="openTab('radar')">雷达图对比</div>
+        <div class="tab" onclick="openTab('full-data')">完整数据表</div>
+    </div>
+
+    <div id="summary" class="tab-content active">
+        <div class="card">
+            <h2>关键绩效指标分析</h2>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>核心发现与洞察</h2>
+            
+            <div class="insight-card">
+                <h3>🏆 头部企业稳定性分析</h3>
+                <p><strong>深圳市远邮国际物流</strong>以<strong>94.84%妥投率</strong>和<strong>0.98%退款率</strong>的综合表现稳居榜首，其日均票数993票显示规模与服务质量的平衡能力。</p>
+                <p><strong>新源晟国际物流</strong>（↑9名至第2名）凭借<strong>91.65%妥投率</strong>和<strong>89.57%回传率</strong>成为最大黑马，但需注意其日均119票的小规模特征。</p>
+            </div>
+            
+            <div class="insight-card">
+                <h3>📊 中游企业关键问题</h3>
+                <p><strong>高单量企业服务稳定性问题</strong>：禾平国际物流（日均5335票）妥投率仅77.27%，义乌市汇增（日均3583票）妥投率70.23%，显示规模扩张可能影响服务质量。</p>
+                <p><strong>数据透明度问题</strong>：9家企业缺失关键指标（如轨迹完整率），影响评估公正性。</p>
+            </div>
+            
+            <div class="insight-card">
+                <h3>⚠️ 尾部企业风险警示</h3>
+                <p><strong>中外运厦门分公司</strong>（↓35名至第49名）妥投率仅<strong>34.25%</strong>，轨迹完整率79.15%，需立即检查末端配送网络。</p>
+                <p><strong>莆田市中洲物流</strong>（第54名）出库及时率45.71% + 妥投率41.02%，多项指标不达标。</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="radar" class="tab-content">
+        <div class="card">
+            <h2>TOP 5服务商雷达图对比</h2>
+            <div class="chart-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+            <p>注：雷达图展示前5名服务商在关键指标上的标准化表现（0-100分制）</p>
+        </div>
+
+        <div class="card">
+            <h2>头部企业指标对比</h2>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="full-data" class="tab-content">
+        <div class="card">
+            <h2>完整物流服务商绩效数据</h2>
+            <div class="data-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>物流服务商名称</th>
+                            <th>认证主体</th>
+                            <th>4月排名</th>
+                            <th>变化</th>
+                            <th>日均票数</th>
+                            <th>48h出库及时率</th>
+                            <th>20d妥投率</th>
+                            <th>48h回传率</th>
+                            <th>轨迹完整率</th>
+                            <th>退款率</th>
+                            <th>总得分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>深圳市远邮国际物流有限公司</td>
+                            <td>-</td>
+                            <td>2</td>
+                            <td class="positive">↑1</td>
+                            <td>993</td>
+                            <td>98.48%</td>
+                            <td>94.84%</td>
+                            <td>91.99%</td>
+                            <td>99.99%</td>
+                            <td>0.98%</td>
+                            <td>99</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>新源晟（深圳）国际物流有限公司</td>
+                            <td>-</td>
+                            <td>11</td>
+                            <td class="positive">↑9</td>
+                            <td>119</td>
+                            <td>98.52%</td>
+                            <td>91.65%</td>
+                            <td>89.57%</td>
+                            <td>99.93%</td>
+                            <td>0.68%</td>
+                            <td>92</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>上海淌瀛供应链科技有限公司</td>
+                            <td>-</td>
+                            <td>1</td>
+                            <td class="negative">↓2</td>
+                            <td>726</td>
+                            <td>99.68%</td>
+                            <td>88.42%</td>
+                            <td>94.04%</td>
+                            <td>98.02%</td>
+                            <td>1.70%</td>
+                            <td>90.5</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>上海前雨国际货运代理有限公司</td>
+                            <td>前雨</td>
+                            <td>32</td>
+                            <td class="positive">↑28</td>
+                            <td>1827</td>
+                            <td>99.93%</td>
+                            <td>70.57%</td>
+                            <td>95.81%</td>
+                            <td>96.00%</td>
+                            <td>0.37%</td>
+                            <td>88</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>莆田市嘉时派信息科技有限公司</td>
+                            <td>一龙</td>
+                            <td>31</td>
+                            <td class="positive">↑26</td>
+                            <td>2176</td>
+                            <td>99.23%</td>
+                            <td>84.09%</td>
+                            <td>81.33%</td>
+                            <td>99.84%</td>
+                            <td>0.46%</td>
+                            <td>86.5</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>莆田市一龙物流有限公司</td>
+                            <td>一龙</td>
+                            <td>22</td>
+                            <td class="positive">↑16</td>
+                            <td>1172</td>
+                            <td>99.82%</td>
+                            <td>87.70%</td>
+                            <td>74.69%</td>
+                            <td>98.08%</td>
+                            <td>0.20%</td>
+                            <td>85</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>广东中鹏供应链管理有限公司</td>
+                            <td>-</td>
+                            <td>51</td>
+                            <td class="positive">↑44</td>
+                            <td>2080</td>
+                            <td>96.44%</td>
+                            <td>89.13%</td>
+                            <td>67.39%</td>
+                            <td>97.52%</td>
+                            <td>0.07%</td>
+                            <td>82</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>丰盛（福建）供应链管理有限公司</td>
+                            <td>禾信</td>
+                            <td>10</td>
+                            <td class="positive">↑2</td>
+                            <td>325</td>
+                            <td>99.84%</td>
+                            <td>91.40%</td>
+                            <td>73.07%</td>
+                            <td>97.77%</td>
+                            <td>0.71%</td>
+                            <td>81.5</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>深圳市禾平国际物流有限公司</td>
+                            <td>美迎</td>
+                            <td>5</td>
+                            <td class="negative">↓4</td>
+                            <td>5335</td>
+                            <td>98.72%</td>
+                            <td>77.27%</td>
+                            <td>84.57%</td>
+                            <td>99.90%</td>
+                            <td>0.65%</td>
+                            <td>80.5</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>深圳市顺友跨境物流股份有限公司</td>
+                            <td>-</td>
+                            <td>17</td>
+                            <td class="positive">↑7</td>
+                            <td>276</td>
+                            <td>70.62%</td>
+                            <td>92.11%</td>
+                            <td>97.76%</td>
+                            <td>99.63%</td>
+                            <td>1.27%</td>
+                            <td>80.5</td>
+                        </tr>
+                        <tr>
+                            <td>11</td>
+                            <td>深圳合联物流供应链管理有限公司</td>
+                            <td>-</td>
+                            <td>41</td>
+                            <td class="positive">↑30</td>
+                            <td>145</td>
+                            <td>86.22%</td>
+                            <td>98.49%</td>
+                            <td>98.39%</td>
+                            <td>97.71%</td>
+                            <td>0.65%</td>
+                            <td>80</td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td>修远天下物流（海南）有限公司</td>
+                            <td>-</td>
+                            <td>29</td>
+                            <td class="positive">↑17</td>
+                            <td>18</td>
+                            <td>99.53%</td>
+                            <td>97.66%</td>
+                            <td>74.41%</td>
+                            <td>100.00%</td>
+                            <td>1.29%</td>
+                            <td>80</td>
+                        </tr>
+                        <tr>
+                            <td>13</td>
+                            <td>北京远大捷通货运代理有限公司广州分公司</td>
+                            <td>-</td>
+                            <td>25</td>
+                            <td class="positive">↑12</td>
+                            <td>815</td>
+                            <td>99.99%</td>
+                            <td>79.88%</td>
+                            <td>83.61%</td>
+                            <td>95.01%</td>
+                            <td>0.51%</td>
+                            <td>79.5</td>
+                        </tr>
+                        <tr>
+                            <td>14</td>
+                            <td>上海佰邮通国际物流有限公司</td>
+                            <td>佰邮通</td>
+                            <td>4</td>
+                            <td class="negative">↓10</td>
+                            <td>91</td>
+                            <td>99.84%</td>
+                            <td>79.85%</td>
+                            <td>97.93%</td>
+                            <td>93.96%</td>
+                            <td>0.48%</td>
+                            <td>79</td>
+                        </tr>
+                        <tr>
+                            <td>15</td>
+                            <td>义达跨境（上海）物流股份有限公司</td>
+                            <td>义达</td>
+                            <td>18</td>
+                            <td class="positive">↑3</td>
+                            <td>16</td>
+                            <td>98.04%</td>
+                            <td>94.97%</td>
+                            <td>95.20%</td>
+                            <td>90.49%</td>
+                            <td>2.17%</td>
+                            <td>76</td>
+                        </tr>
+                        <tr>
+                            <td>16</td>
+                            <td>广州市鑫吉云国际物流有限公司</td>
+                            <td>鑫吉运</td>
+                            <td>37</td>
+                            <td class="positive">↑21</td>
+                            <td>1388</td>
+                            <td>92.61%</td>
+                            <td>82.23%</td>
+                            <td>76.79%</td>
+                            <td>99.99%</td>
+                            <td>0.28%</td>
+                            <td>71.5</td>
+                        </tr>
+                        <tr>
+                            <td>17</td>
+                            <td>河南省秦巴供应链有限公司</td>
+                            <td>-</td>
+                            <td>8</td>
+                            <td class="negative">↓9</td>
+                            <td>442</td>
+                            <td>99.49%</td>
+                            <td>88.47%</td>
+                            <td>65.83%</td>
+                            <td>78.72%</td>
+                            <td>0.83%</td>
+                            <td>71.5</td>
+                        </tr>
+                        <tr>
+                            <td>18</td>
+                            <td>佛山乾和供应链管理有限公司</td>
+                            <td>乾和盛</td>
+                            <td>27</td>
+                            <td class="positive">↑9</td>
+                            <td>62</td>
+                            <td>95.02%</td>
+                            <td>84.46%</td>
+                            <td>77.46%</td>
+                            <td>99.59%</td>
+                            <td>0.82%</td>
+                            <td>71</td>
+                        </tr>
+                        <tr>
+                            <td>19</td>
+                            <td>广州市应达供应链服务有限公司</td>
+                            <td>-</td>
+                            <td>3</td>
+                            <td class="negative">↓16</td>
+                            <td>381</td>
+                            <td>99.93%</td>
+                            <td>74.44%</td>
+                            <td>94.47%</td>
+                            <td>97.13%</td>
+                            <td>2.32%</td>
+                            <td>69.5</td>
+                        </tr>
+                        <tr>
+                            <td>20</td>
+                            <td>深圳市跨境易通供应链管理有限公司</td>
+                            <td>-</td>
+                            <td>44</td>
+                            <td class="positive">↑24</td>
+                            <td>871</td>
+                            <td>97.15%</td>
+                            <td>71.97%</td>
+                            <td>74.83%</td>
+                            <td>99.38%</td>
+                            <td>0.34%</td>
+                            <td>69</td>
+                        </tr>
+                        <tr>
+                            <td>21</td>
+                            <td>深圳市跨通达物流有限公司</td>
+                            <td>跨通达</td>
+                            <td>19</td>
+                            <td class="negative">↓2</td>
+                            <td>827</td>
+                            <td>82.72%</td>
+                            <td>92.35%</td>
+                            <td>55.09%</td>
+                            <td>99.99%</td>
+                            <td>0.88%</td>
+                            <td>69</td>
+                        </tr>
+                        <tr>
+                            <td>22</td>
+                            <td>深圳市华亚运通国际货运代理有限公司广州分公司</td>
+                            <td>华亚运通</td>
+                            <td>15</td>
+                            <td class="negative">↓7</td>
+                            <td>26</td>
+                            <td>100.00%</td>
+                            <td>70.48%</td>
+                            <td>78.94%</td>
+                            <td>95.70%</td>
+                            <td>0.79%</td>
+                            <td>68</td>
+                        </tr>
+                        <tr>
+                            <td>23</td>
+                            <td>义乌市汇增供应链管理有限公司</td>
+                            <td>跨境鲸</td>
+                            <td>6</td>
+                            <td class="negative">↓17</td>
+                            <td>3583</td>
+                            <td>96.57%</td>
+                            <td>70.23%</td>
+                            <td>73.22%</td>
+                            <td>91.80%</td>
+                            <td>0.86%</td>
+                            <td>66</td>
+                        </tr>
+                        <tr>
+                            <td>24</td>
+                            <td>深圳市琪林国际物流有限公司</td>
+                            <td>琪林</td>
+                            <td>23</td>
+                            <td class="negative">↓1</td>
+                            <td>2066</td>
+                            <td>71.56%</td>
+                            <td>78.27%</td>
+                            <td>82.60%</td>
+                            <td>96.43%</td>
+                            <td>1.10%</td>
+                            <td>65.5</td>
+                        </tr>
+                        <tr>
+                            <td>25</td>
+                            <td>广东拓界供应链管理有限公司</td>
+                            <td>拓界</td>
+                            <td>55</td>
+                            <td class="positive">↑30</td>
+                            <td>3</td>
+                            <td>100.00%</td>
+                            <td>100.00%</td>
+                            <td>51.28%</td>
+                            <td>100.00%</td>
+                            <td>-</td>
+                            <td>65</td>
+                        </tr>
+                        <tr>
+                            <td>26</td>
+                            <td>鑫淼（深圳）国际物流供应链管理有限公司</td>
+                            <td>-</td>
+                            <td>42</td>
+                            <td class="positive">↑16</td>
+                            <td>936</td>
+                            <td>87.75%</td>
+                            <td>72.03%</td>
+                            <td>81.98%</td>
+                            <td>98.95%</td>
+                            <td>0.38%</td>
+                            <td>64.5</td>
+                        </tr>
+                        <tr>
+                            <td>27</td>
+                            <td>深圳市新时通达国际物流有限公司</td>
+                            <td>-</td>
+                            <td>30</td>
+                            <td class="positive">↑3</td>
+                            <td>504</td>
+                            <td>95.69%</td>
+                            <td>75.48%</td>
+                            <td>62.92%</td>
+                            <td>91.25%</td>
+                            <td>0.49%</td>
+                            <td>64</td>
+                        </tr>
+                        <tr>
+                            <td>28</td>
+                            <td>恒广达（深圳）供应链科技有限公司</td>
+                            <td>-</td>
+                            <td>16</td>
+                            <td class="negative">↓12</td>
+                            <td>676</td>
+                            <td>97.63%</td>
+                            <td>76.44%</td>
+                            <td>75.38%</td>
+                            <td>87.61%</td>
+                            <td>0.60%</td>
+                            <td>64</td>
+                        </tr>
+                        <tr>
+                            <td>29</td>
+                            <td>深圳市递四方速递有限公司</td>
+                            <td>-</td>
+                            <td>21</td>
+                            <td class="negative">↓8</td>
+                            <td>79</td>
+                            <td>37.71%</td>
+                            <td>96.02%</td>
+                            <td>98.29%</td>
+                            <td>84.03%</td>
+                            <td>1.77%</td>
+                            <td>62.5</td>
+                        </tr>
+                        <tr>
+                            <td>30</td>
+                            <td>莆田市利葆通旭供应链有限公司</td>
+                            <td>利葆通旭</td>
+                            <td>28</td>
+                            <td class="negative">↓2</td>
+                            <td>292</td>
+                            <td>97.79%</td>
+                            <td>67.57%</td>
+                            <td>86.86%</td>
+                            <td>93.12%</td>
+                            <td>1.09%</td>
+                            <td>61.5</td>
+                        </tr>
+                        <tr>
+                            <td>31</td>
+                            <td>厦门小楂达国际货运代理有限公司</td>
+                            <td>-</td>
+                            <td>9</td>
+                            <td class="negative">↓22</td>
+                            <td>1339</td>
+                            <td>99.13%</td>
+                            <td>67.20%</td>
+                            <td>69.36%</td>
+                            <td>99.85%</td>
+                            <td>1.22%</td>
+                            <td>61</td>
+                        </tr>
+                        <tr>
+                            <td>32</td>
+                            <td>莆田市星洲港物流有限公司</td>
+                            <td>沣渊</td>
+                            <td>12</td>
+                            <td class="negative">↓20</td>
+                            <td>260</td>
+                            <td>98.93%</td>
+                            <td>75.05%</td>
+                            <td>67.43%</td>
+                            <td>100.00%</td>
+                            <td>1.74%</td>
+                            <td>61</td>
+                        </tr>
+                        <tr>
+                            <td>33</td>
+                            <td>深圳前海德远现代物流有限公司</td>
+                            <td>-</td>
+                            <td>7</td>
+                            <td class="negative">↓26</td>
+                            <td>16</td>
+                            <td>83.59%</td>
+                            <td>96.35%</td>
+                            <td>97.32%</td>
+                            <td>64.71%</td>
+                            <td>0.56%</td>
+                            <td>60</td>
+                        </tr>
+                        <tr>
+                            <td>34</td>
+                            <td>燕文物流股份有限公司</td>
+                            <td>燕文</td>
+                            <td>24</td>
+                            <td class="negative">↓10</td>
+                            <td>140</td>
+                            <td>84.20%</td>
+                            <td>86.51%</td>
+                            <td>99.43%</td>
+                            <td>66.93%</td>
+                            <td>0.76%</td>
+                            <td>60</td>
+                        </tr>
+                        <tr>
+                            <td>35</td>
+                            <td>深圳市易德供应链有限公司广州分公司</td>
+                            <td>易德</td>
+                            <td>36</td>
+                            <td class="positive">↑1</td>
+                            <td>2</td>
+                            <td>100.00%</td>
+                            <td>91.18%</td>
+                            <td>90.17%</td>
+                            <td>23.21%</td>
+                            <td>7.18%</td>
+                            <td>60</td>
+                        </tr>
+                        <tr>
+                            <td>36</td>
+                            <td>深圳市欧美派供应商管理有限公司</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="negative">New/↓36</td>
+                            <td>26</td>
+                            <td>100.00%</td>
+                            <td>96.25%</td>
+                            <td>96.93%</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>60</td>
+                        </tr>
+                        <tr>
+                            <td>37</td>
+                            <td>广州市航派国际物流有限公司</td>
+                            <td>-</td>
+                            <td>45</td>
+                            <td class="positive">↑8</td>
+                            <td>33</td>
+                            <td>97.69%</td>
+                            <td>94.48%</td>
+                            <td>46.85%</td>
+                            <td>38.66%</td>
+                            <td>0.29%</td>
+                            <td>57</td>
+                        </tr>
+                        <tr>
+                            <td>38</td>
+                            <td>深圳永利八达通物流科技有限公司</td>
+                            <td>八达通</td>
+                            <td>33</td>
+                            <td class="negative">↓5</td>
+                            <td>2</td>
+                            <td>96.30%</td>
+                            <td>100.00%</td>
+                            <td>97.48%</td>
+                            <td>0.00%</td>
+                            <td>4.35%</td>
+                            <td>57</td>
+                        </tr>
+                        <tr>
+                            <td>39</td>
+                            <td>莆田市博莱信息科技有限公司</td>
+                            <td>行歌</td>
+                            <td>-</td>
+                            <td class="negative">New/↓39</td>
+                            <td>2</td>
+                            <td>100.00%</td>
+                            <td>83.33%</td>
+                            <td>93.70%</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>54</td>
+                        </tr>
+                        <tr>
+                            <td>40</td>
+                            <td>甄兴盛越国际物流（莆田）有限公司</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="negative">New/↓40</td>
+                            <td>138</td>
+                            <td>89.04%</td>
+                            <td>88.63%</td>
+                            <td>82.59%</td>
+                            <td>90.31%</td>
+                            <td>-</td>
+                            <td>53.5</td>
+                        </tr>
+                        <tr>
+                            <td>41</td>
+                            <td>宁波邮必达物流科技有限公司</td>
+                            <td>邮必达</td>
+                            <td>13</td>
+                            <td class="negative">↓28</td>
+                            <td>12</td>
+                            <td>100.00%</td>
+                            <td>78.50%</td>
+                            <td>72.17%</td>
+                            <td>99.09%</td>
+                            <td>5.56%</td>
+                            <td>53</td>
+                        </tr>
+                        <tr>
+                            <td>42</td>
+                            <td>深圳市美胜国际供应链有限公司</td>
+                            <td>-</td>
+                            <td>35</td>
+                            <td class="negative">↓7</td>
+                            <td>1241</td>
+                            <td>98.19%</td>
+                            <td>55.43%</td>
+                            <td>68.49%</td>
+                            <td>97.36%</td>
+                            <td>1.42%</td>
+                            <td>52</td>
+                        </tr>
+                        <tr>
+                            <td>43</td>
+                            <td>广州玖运通国际物流服务有限公司</td>
+                            <td>-</td>
+                            <td>40</td>
+                            <td class="negative">↓3</td>
+                            <td>240</td>
+                            <td>99.64%</td>
+                            <td>56.22%</td>
+                            <td>73.25%</td>
+                            <td>98.39%</td>
+                            <td>1.09%</td>
+                            <td>50.5</td>
+                        </tr>
+                        <tr>
+                            <td>44</td>
+                            <td>莆田市星耀联畅国际物流有限公司</td>
+                            <td>星耀联畅</td>
+                            <td>-</td>
+                            <td class="negative">New/↓44</td>
+                            <td>26</td>
+                            <td>99.71%</td>
+                            <td>91.74%</td>
+                            <td>53.36%</td>
+                            <td>60.00%</td>
+                            <td>-</td>
+                            <td>45</td>
+                        </tr>
+                        <tr>
+                            <td>45</td>
+                            <td>广州中航国际供应链有限公司</td>
+                            <td>中航</td>
+                            <td>-</td>
+                            <td class="negative">New/↓45</td>
+                            <td>3</td>
+                            <td>96.55%</td>
+                            <td>96.55%</td>
+                            <td>50.60%</td>
+                            <td>12.50%</td>
+                            <td>-</td>
+                            <td>42</td>
+                        </tr>
+                        <tr>
+                            <td>46</td>
+                            <td>嘉里大通物流有限公司</td>
+                            <td>-</td>
+                            <td>38</td>
+                            <td class="negative">↓8</td>
+                            <td>249</td>
+                            <td>77.00%</td>
+                            <td>61.98%</td>
+                            <td>81.68%</td>
+                            <td>96.48%</td>
+                            <td>1.63%</td>
+                            <td>41.5</td>
+                        </tr>
+                        <tr>
+                            <td>47</td>
+                            <td>中通云仓科技有限公司</td>
+                            <td>-</td>
+                            <td>34</td>
+                            <td class="negative">↓13</td>
+                            <td>325</td>
+                            <td>81.15%</td>
+                            <td>67.54%</td>
+                            <td>72.11%</td>
+                            <td>94.09%</td>
+                            <td>0.60%</td>
+                            <td>38.5</td>
+                        </tr>
+                        <tr>
+                            <td>48</td>
+                            <td>深圳市青云物流供应链管理有限公司</td>
+                            <td>-</td>
+                            <td>50</td>
+                            <td class="positive">↑2</td>
+                            <td>2</td>
+                            <td>69.23%</td>
+                            <td>92.31%</td>
+                            <td>82.51%</td>
+                            <td>27.27%</td>
+                            <td>-</td>
+                            <td>37.5</td>
+                        </tr>
+                        <tr>
+                            <td>49</td>
+                            <td>中外运空运有限公司厦门分公司</td>
+                            <td>玖铭通</td>
+                            <td>14</td>
+                            <td class="negative">↓35</td>
+                            <td>939</td>
+                            <td>94.28%</td>
+                            <td>34.25%</td>
+                            <td>79.43%</td>
+                            <td>79.15%</td>
+                            <td>0.40%</td>
+                            <td>36.5</td>
+                        </tr>
+                        <tr>
+                            <td>50</td>
+                            <td>深圳市拓达通国际物流服务有限公司</td>
+                            <td>-</td>
+                            <td>39</td>
+                            <td class="negative">↓11</td>
+                            <td>45</td>
+                            <td>99.53%</td>
+                            <td>49.23%</td>
+                            <td>79.69%</td>
+                            <td>99.76%</td>
+                            <td>3.09%</td>
+                            <td>35</td>
+                        </tr>
+                        <tr>
+                            <td>51</td>
+                            <td>深圳盈风达供应链管理有限公司</td>
+                            <td>-</td>
+                            <td>20</td>
+                            <td class="negative">↓31</td>
+                            <td>16</td>
+                            <td>92.58%</td>
+                            <td>58.75%</td>
+                            <td>77.34%</td>
+                            <td>98.45%</td>
+                            <td>3.43%</td>
+                            <td>27.5</td>
+                        </tr>
+                        <tr>
+                            <td>52</td>
+                            <td>深圳市通云航国际供应链管理有限公司</td>
+                            <td>通云航</td>
+                            <td>47</td>
+                            <td class="negative">↓5</td>
+                            <td>196</td>
+                            <td>81.69%</td>
+                            <td>48.61%</td>
+                            <td>65.23%</td>
+                            <td>76.60%</td>
+                            <td>0.25%</td>
+                            <td>25</td>
+                        </tr>
+                        <tr>
+                            <td>53</td>
+                            <td>深圳市启航腾飞供应链有限公司</td>
+                            <td>-</td>
+                            <td>26</td>
+                            <td class="negative">↓27</td>
+                            <td>156</td>
+                            <td>77.42%</td>
+                            <td>59.99%</td>
+                            <td>82.10%</td>
+                            <td>43.00%</td>
+                            <td>0.88%</td>
+                            <td>22.5</td>
+                        </tr>
+                        <tr>
+                            <td>54</td>
+                            <td>莆田市中洲物流供应链有限公司</td>
+                            <td>中洲</td>
+                            <td>43</td>
+                            <td class="negative">↓11</td>
+                            <td>2273</td>
+                            <td>45.71%</td>
+                            <td>41.02%</td>
+                            <td>61.17%</td>
+                            <td>74.20%</td>
+                            <td>1.04%</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>55</td>
+                            <td>上海弘辰速供应链管理有限公司</td>
+                            <td>-</td>
+                            <td>46</td>
+                            <td class="negative">↓9</td>
+                            <td>1</td>
+                            <td>100.00%</td>
+                            <td>100.00%</td>
+                            <td>30.95%</td>
+                            <td>0.00%</td>
+                            <td>-</td>
+                            <td>0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 切换标签页
+        function openTab(tabName) {
+            const tabs = document.getElementsByClassName('tab');
+            const tabContents = document.getElementsByClassName('tab-content');
+            
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+                tabContents[i].classList.remove('active');
+            }
+            
+            document.querySelector(`.tab[onclick="openTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // 绩效对比柱状图
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(performanceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['TOP 1-5', 'TOP 6-10', '11-20', '21-30', '31-40', '41-55'],
+                datasets: [
+                    {
+                        label: '平均妥投率',
+                        data: [92.1, 86.3, 80.2, 75.4, 68.7, 52.1],
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '平均出库及时率',
+                        data: [99.3, 97.8, 95.2, 93.1, 90.4, 82.7],
+                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '不同排名区间的关键指标对比'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 50,
+                        title: {
+                            display: true,
+                            text: '百分比(%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // 雷达图
+        const radarCtx = document.getElementById('radarChart').getContext('2d');
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: ['日均票数', '出库及时率', '妥投率', '回传率', '轨迹完整率', '退款率'],
+                datasets: [
+                    {
+                        label: '远邮国际(第1名)',
+                        data: [80, 98, 95, 92, 100, 99],
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(52, 152, 219, 1)'
+                    },
+                    {
+                        label: '新源晟(第2名)',
+                        data: [20, 98, 92, 90, 100, 99],
+                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(46, 204, 113, 1)'
+                    },
+                    {
+                        label: '上海淌瀛(第3名)',
+                        data: [70, 100, 88, 94, 98, 83],
+                        backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                        borderColor: 'rgba(155, 89, 182, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(155, 89, 182, 1)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'TOP 3服务商六维能力对比'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const labels = ['票数(标准化)', '出库及时率%', '妥投率%', '回传率%', '轨迹完整率%', '退款控制得分'];
+                                return `${labels[context.dataIndex]}: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+
+        // 柱状图对比
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['远邮国际', '新源晟', '上海淌瀛', '上海前雨', '莆田嘉时派'],
+                datasets: [
+                    {
+                        label: '日均票数',
+                        data: [993, 119, 726, 1827, 2176],
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '妥投率(%)',
+                        data: [94.84, 91.65, 88.42, 70.57, 84.09],
+                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'TOP 5服务商规模与服务质量对比'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: true
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '日均票数'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        min: 50,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: '妥投率(%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
